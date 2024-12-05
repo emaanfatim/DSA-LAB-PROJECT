@@ -1,4 +1,4 @@
-#include <SFML/Graphics.hpp>
+I'm#include <SFML/Graphics.hpp>
 #include <SFML/Window.hpp>
 #include <SFML/Audio.hpp>
 #include <cstdlib>
@@ -138,4 +138,42 @@ int main() {
     gameName.setFillColor(sf::Color::Cyan);
     gameName.setPosition(desktopMode.width / 2 - gameName.getGlobalBounds().width / 2, 50);
 
-    
+    settingsOptions[i].setFillColor(i == settingsIndex ? sf::Color::Yellow : sf::Color::White);
+                    }
+                }
+
+                // Dynamically update the text for the settings
+                settingsOptions[0].setString("Fullscreen: " + std::string(isFullscreen ? "On" : "Off"));
+                settingsOptions[1].setString("Resolution: " + std::to_string(availableResolutions[selectedResolutionIndex].width) + "x" + std::to_string(availableResolutions[selectedResolutionIndex].height));
+                settingsOptions[2].setString("Brightness: " + std::to_string(brightnessLevel) + "%");
+                settingsOptions[3].setString("Volume: " + std::to_string(volumeLevel) + "%");
+            }
+        }
+
+        // Clear screen
+        window.clear();
+
+        if (gameState == GameState::SplashScreen) {
+            window.draw(backgroundSprite); // Splash screen background
+            window.draw(subtitle);
+        }
+        else if (gameState == GameState::Menu) {
+            window.draw(menuBackgroundSprite); // Menu background
+            window.draw(gameName);
+            for (int i = 0; i < 3; ++i) {
+                window.draw(menuItems[i]);
+            }
+        }
+        else if (gameState == GameState::Settings) {
+            window.draw(menuBackgroundSprite); // Settings background
+            for (int i = 0; i < 4; ++i) {
+                window.draw(settingsOptions[i]);
+            }
+            window.draw(backToMenu); // Back to menu text
+        }
+
+        window.display();
+    }
+
+    return 0;
+}
