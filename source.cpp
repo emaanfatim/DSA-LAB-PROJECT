@@ -1,10 +1,18 @@
-I'm#include <SFML/Graphics.hpp>
+#include <SFML/Graphics.hpp>
 #include <SFML/Window.hpp>
 #include <SFML/Audio.hpp>
 #include <cstdlib>
 #include <ctime>
 #include <vector>
 #include <string>
+
+// Custom clamp function
+template <typename T>
+T clamp(T value, T min, T max) {
+    if (value < min) return min;
+    if (value > max) return max;
+    return value;
+}
 
 // Star class definition
 class Star {
@@ -116,7 +124,7 @@ int main() {
     );
 
     // Game states
-    enum class GameState { SplashScreen, Menu, Play, Settings, Quit, FullscreenSettings, BrightnessSettings, ResolutionSettings, VolumeSettings };
+    enum class GameState { SplashScreen, Menu, Settings, Quit, Play };
     GameState gameState = GameState::SplashScreen;
 
     // Menu items
@@ -137,43 +145,3 @@ int main() {
     sf::Text gameName("Fantasy Adventure Game", gameNameFont, 100);
     gameName.setFillColor(sf::Color::Cyan);
     gameName.setPosition(desktopMode.width / 2 - gameName.getGlobalBounds().width / 2, 50);
-
-    settingsOptions[i].setFillColor(i == settingsIndex ? sf::Color::Yellow : sf::Color::White);
-                    }
-                }
-
-                // Dynamically update the text for the settings
-                settingsOptions[0].setString("Fullscreen: " + std::string(isFullscreen ? "On" : "Off"));
-                settingsOptions[1].setString("Resolution: " + std::to_string(availableResolutions[selectedResolutionIndex].width) + "x" + std::to_string(availableResolutions[selectedResolutionIndex].height));
-                settingsOptions[2].setString("Brightness: " + std::to_string(brightnessLevel) + "%");
-                settingsOptions[3].setString("Volume: " + std::to_string(volumeLevel) + "%");
-            }
-        }
-
-        // Clear screen
-        window.clear();
-
-        if (gameState == GameState::SplashScreen) {
-            window.draw(backgroundSprite); // Splash screen background
-            window.draw(subtitle);
-        }
-        else if (gameState == GameState::Menu) {
-            window.draw(menuBackgroundSprite); // Menu background
-            window.draw(gameName);
-            for (int i = 0; i < 3; ++i) {
-                window.draw(menuItems[i]);
-            }
-        }
-        else if (gameState == GameState::Settings) {
-            window.draw(menuBackgroundSprite); // Settings background
-            for (int i = 0; i < 4; ++i) {
-                window.draw(settingsOptions[i]);
-            }
-            window.draw(backToMenu); // Back to menu text
-        }
-
-        window.display();
-    }
-
-    return 0;
-}
