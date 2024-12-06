@@ -145,3 +145,149 @@ int main() {
     sf::Text gameName("Fantasy Adventure Game", gameNameFont, 100);
     gameName.setFillColor(sf::Color::Cyan);
     gameName.setPosition(desktopMode.width / 2 - gameName.getGlobalBounds().width / 2, 50);
+// Brightness overlay
+    sf::RectangleShape brightnessOverlay(sf::Vector2f(static_cast<float>(desktopMode.width), static_cast<float>(desktopMode.height)));
+    brightnessOverlay.setFillColor(sf::Color(0, 0, 0, 0)); // Initially transparent
+
+    // Settings variables
+    bool isFullscreen = true;
+    int brightnessLevel = 100; // Initial brightness (100 = full brightness)
+    int volumeLevel = 50; // Initial volume level (0 to 100)
+    int selectedResolutionIndex = 0; // Default resolution index
+    std::vector<sf::VideoMode> availableResolutions = {
+        sf::VideoMode(1280, 720),
+        sf::VideoMode(1920, 1080),
+        sf::VideoMode(1366, 768)
+    };
+
+    // Settings menu
+    sf::Text settingsOptions[4];
+    std::string settingsLabels[] = { "Fullscreen: ", "Resolution: ", "Brightness: ", "Volume: " };
+    int settingsIndex = 0;
+
+    for (int i = 0; i < 4; ++i) {
+        settingsOptions[i].setFont(font);
+        settingsOptions[i].setCharacterSize(70);
+        settingsOptions[i].setFillColor(i == settingsIndex ? sf::Color::Yellow : sf::Color::White);
+        settingsOptions[i].setPosition(static_cast<float>(desktopMode.width) / 2 - settingsOptions[i].getGlobalBounds().width / 2,
+            static_cast<float>(desktopMode.height) / 2 + i * 100);
+    }
+
+    sf::Text backToMenu("Press Backspace to Go Back", font, 50);
+    backToMenu.setFillColor(sf::Color::White);
+    backToMenu.setPosition(static_cast<float>(desktopMode.width) / 2 - backToMenu.getGlobalBounds().width / 2, static_cast<float>(desktopMode.height) - 150.0f);
+
+    while (window.isOpen()) {
+        sf::Event event;
+        while (window.pollEvent(event)) {
+            if (event.type == sf::Event::Closed) {
+                window.close();
+            }
+
+            if (gameState == GameState::SplashScreen && event.type == sf::Event::KeyPressed) {
+                gameState = GameState::Menu;
+            }
+            else if (gameState == GameState::Menu) {
+                if (event.type == sf::Event::KeyPressed) {
+                    if (event.key.code == sf::Keyboard::Up) {
+                        selectedIndex = (selectedIndex - 1 + 3) % 3;
+                    }
+                    else if (event.key.code == sf::Keyboard::Down) {
+                        selectedIndex = (selectedIndex + 1) % 3;
+                    }
+                    else if (event.key.code == sf::Keyboard::Enter) {
+                        if (selectedIndex == 0) {
+                            gameState = GameState::Play;
+                        }
+                        else if (selectedIndex == 1) {
+                            gameState = GameState::Settings;
+                        }
+                        else if (selectedIndex == 2) {
+                            window.close();
+                        }
+                    }
+
+                    for (int i = 0; i < 3; ++i) {
+                        menuItems[i].setFillColor(i == selectedIndex ? sf::Color::Yellow : sf::Color::White);
+                    }
+                }
+            }
+            else if (gameState == GameState::Settings) {
+                if (event.type == sf::Event::KeyPressed) {
+                    if (event.key.code == sf::Keyboard::Up) {
+                        settingsIndex = (settingsIndex - 1 + 4) % 4;
+                    }
+                    else if (event.key.code == sf::Keyboard::Down) {
+                        settingsIndex = (settingsIndex + 1) % 4;
+                    }
+                    else if (event.key.code == sf::Keyboard::Enter) {
+                        switch (settingsIndex) {
+                        case 0:
+                            isFullscreen = !isFullscreen;
+                            recreateWindow(window, isFullscreen);
+                            break;
+                        case 1:
+                            selectedResolutionIndex = (selectedResolutionIndex + 1) % availableResolutions.size();
+                            window.create(availableResolutions[selectedResolutionIndex], "Fantasy Adventure Game", sf::Style::Fullscreen);
+                            break;
+                        case 2:
+                            brightnessLevel = (brightnessLevel + 10) % 110;
+                            break;
+                        case 3:
+                            volumeLevel = (volumeLevel + 10) % 110;
+                            music.setVolume(volumeLevel);
+                            break;
+                        }
+                    }
+                    else if (event.key.code == sf::Keyboard::Backspace) {
+                        gameState = GameState::Menu;
+                    }
+
+                    for (int i = 0; i < 4; ++i) {
+                        settingsOptions[i].setFillColor(i == settingsIndex ? sf::Color::Yellow : sf::Color::White);
+                    }
+                }
+
+                // Update settings text
+                settingsOptions[0].setString("Fullscreen: " + std::string(isFullscreen ? "On" : "Off"));
+                settingsOptions[1].setString("Resolution: " + std::to_string(availableResolutions[selectedResolutionIndex].width) + "x" + std::to_string(availableResolutions[selectedResolutionIndex].height));
+                settingsOptions[2].setString("Brightness: " + std::to_string(brightnessLevel) + "%");
+                settingsOptions[3].setString("Volume: " + std::to_string(volumeLevel) + "%");
+
+
+                int alphaValue = static_cast<int>(255 - (brightnessLevel / 100.0f) * 255);
+                alphaValue = clamp(alphaValue, 0, 255); // Use your custom clamp here if needed
+                brightnessOverlay.setFillColor(sf::Color(0, 0, 0, alphaValue));
+
+            }
+        }
+
+        window.clear();
+
+        // Draw based on game state
+        if (gameState == GameState::SplashScreen) {
+            window.draw(backgroundSprite);
+            window.draw(subtitle);
+        }
+        else if (gameState == GameState::Menu) {
+            window.draw(menuBackgroundSprite);
+            for (const auto& item : menuItems) {
+                window.draw(item);
+            }
+            window.draw(gameName);
+        }
+        else if (gameState == GameState::Settings) {
+            window.draw(menuBackgroundSprite);
+            for (const auto& option : settingsOptions) {
+                window.draw(option);
+            }
+            window.draw(backToMenu);
+        }
+
+        // Draw brightness overlay
+        window.draw(brightnessOverlay);
+        window.display();
+    }
+
+    return 0;
+}
